@@ -1,0 +1,53 @@
+- hosts: master
+  become: yes
+  tasks:
+    - name: Download config images
+      shell:  kubeadm config images pull
+      args:
+        chdir: $HOME
+
+    - name: Initialize the cluster
+      shell: kubeadm init --pod-network-cidr=10.244.0.0/16 >> cluster_initialized.txt
+      args:
+        chdir: $HOME
+        creates: cluster_initialized.txt
+
+    - name: Create .kube directory
+      become: yes
+      become_user: ubuntu
+      file:
+        path: $HOME/.kube
+        state: directory
+        mode: 0755
+
+    - name: Copy admin.conf to user's kube config
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/ubuntu/.kube/config
+        remote_src: yes
+        owner: ubuntu
+
+    - name: Install Pod network
+      become: yes
+      become_user: ubuntu
+      shell: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml >> pod_network_setup.txt
+      args:
+        chdir: $HOME
+        creates: pod_network_setup.txt
+
+    # - name: Install Dashboard
+    #   become: yes
+    #   become_user: ubuntu
+    #   shell: kubectl create -f https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml >> pod_dashboard.txt
+    #   args:
+    #     chdir: $HOME
+    #     creates: pod_dashboard.txt
+
+
+    # - name: Install Pod network rbac
+    #   become: yes
+    #   become_user: ubuntu
+    #   shell: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/k8s-manifests/kube-flannel-rbac.yml >> pod_network_rbac_setup.txt
+    #   args:
+    #     chdir: $HOME
+    #     creates: pod_network_rbac_setup.txt

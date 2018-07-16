@@ -15,7 +15,7 @@ IMAGES="/var/lib/libvirt/images"
 #IMAGE="${IMAGES}/CentOS-6-x86_64-GenericCloud.qcow2"
 IMAGE="${IMAGES}/ubuntu-16.04-server-cloudimg-amd64-disk1.img"
  
-STORAGE="/home/diego/projects/clould/kubernetes"
+STORAGE="$PWD"
 INSTANCES="${STORAGE}/instances"
  
 # Amount of RAM in MB
@@ -53,9 +53,9 @@ DISK="${INSTANCE_PATH}/${VM_NAME}.qcow2"
 
 # Bridge for VMs (default on Fedora is bridge0)
 EXTERNAL_BRIDGE="external"
-EXTERNAL_BRIDGE_MAC="f8:34:41:37:fe:e1"
+EXTERNAL_BRIDGE_MAC="f8:35:41:37:fe:e1"
 INTERNAL_BRIDGE="internal"
-INTERNAL_BRIDGE_MAC="f8:34:41:37:fe:e2"
+INTERNAL_BRIDGE_MAC="f8:35:41:37:fe:e2"
 
 echo "INFO: Creating instance environment ${INSTANCE_PATH}" 
 
@@ -94,7 +94,7 @@ hostname: ${VM_NAME}
 fqdn: ${VM_NAME}.${DOMAIN}
 
 bootcmd:
-   - echo "nameserver 201.55.232.74" > /etc/resolv.conf
+   - echo "nameserver 172.16.22.244" > /etc/resolv.conf
    - echo "domain dtux.lan" >> /etc/resolv.conf
    - echo "192.168.2.20   kube-master    kube-master.dtux.lan" >> /etc/hosts
    - echo "${IPADDR}   ${VM_NAME}    ${VM_NAME}.dtux.lan" >> /etc/hosts
@@ -120,15 +120,10 @@ users:
       - $(cat $HOME/.ssh/id_rsa.pub)
 
 runcmd:
-   - [ yum, -y, remove, cloud-init ]
    - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
-   - curl -sL https://gist.githubusercontent.com/alexellis/e8bbec45c75ea38da5547746c0ca4b0c/raw/23fc4cd13910eac646b13c4f8812bab3eeebab4c/configure.sh | sudo sh
-   - sudo wget https://github.com/bcicen/ctop/releases/download/v0.7.1/ctop-0.7.1-linux-amd64 -O /usr/local/bin/ctop
-   - sudo chmod +x /usr/local/bin/ctop
-   - kubeadm join 192.168.2.20:6443 --token hi88lu.5jynzv4rnc491c9a --discovery-token-ca-cert-hash sha256:045b66f8ce43e385b24fb59b891bf6e6718294299debc471aecbed4bfd7ede1c
 
 package_update: true
-package_upgrade: true
+package_upgrade: false
 packages:
   - ntpdate
   - net-tools

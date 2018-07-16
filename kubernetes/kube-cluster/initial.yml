@@ -1,0 +1,31 @@
+- hosts: all
+  become: yes
+  tasks:
+    - name: Create the 'ubuntu' user
+      user: name=ubuntu append=yes state=present createhome=yes shell=/bin/bash
+
+    # - name: Ensure SELinux is enforcing
+    #   selinux:
+    #     policy: targeted
+    #     state: disabled
+
+    - name: Creating MACAddressPolicy
+      copy:
+        content: |
+          [Link]
+          MACAddressPolicy=none
+        dest: /etc/systemd/network/99-default.link
+
+    - name: Restarting udevd
+      shell: systemctl restart systemd-udevd
+
+    - name: Allow 'ubuntu' to have passwordless sudo
+      lineinfile:
+        dest: /etc/sudoers
+        line: 'ubuntu ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+
+    - name: Set up authorized keys for the ubuntu user
+      authorized_key: user=ubuntu key="{{item}}"
+      with_file:
+        - ~/.ssh/id_rsa.pub

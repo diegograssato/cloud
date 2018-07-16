@@ -15,7 +15,7 @@ IMAGES="/var/lib/libvirt/images"
 #IMAGE="${IMAGES}/CentOS-6-x86_64-GenericCloud.qcow2"
 IMAGE="${IMAGES}/ubuntu-16.04-server-cloudimg-amd64-disk1.img"
  
-STORAGE="/home/diego/projects/clould/kubernetes"
+STORAGE="$PWD"
 INSTANCES="${STORAGE}/instances"
  
 # Amount of RAM in MB
@@ -94,7 +94,7 @@ hostname: ${VM_NAME}
 fqdn: ${VM_NAME}.${DOMAIN}
 
 bootcmd:
-   - echo "nameserver 201.55.232.74" > /etc/resolv.conf
+   - echo "nameserver 172.16.22.244" > /etc/resolv.conf
    - echo "domain dtux.lan" >> /etc/resolv.conf
    - echo "${IPADDR}   ${VM_NAME}    ${VM_NAME}.dtux.lan" >> /etc/hosts
 

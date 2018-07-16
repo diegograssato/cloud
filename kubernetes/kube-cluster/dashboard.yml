@@ -1,0 +1,87 @@
+- hosts: master
+  become: yes
+  tasks:
+    - name: Install Dashboard
+      become: yes
+      become_user: ubuntu
+      shell: kubectl create -f https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml >> pod_dashboard.txt
+      args:
+        chdir: $HOME
+        creates: pod_dashboard.txt
+
+    - name: Get dashboard configuration
+      become: yes
+      become_user: ubuntu
+      shell: kubectl -n kube-system get service kubernetes-dashboard -o yaml > kube-dash-svc.yaml
+      args:
+        chdir: $HOME
+        creates: kube-dash-svc.yaml
+
+    - name: Change ClusterIP to NodePort
+      become: yes
+      become_user: ubuntu
+      shell:  sed -i 's/ClusterIP/NodePort/' kube-dash-svc.yaml
+      args:
+        chdir: $HOME
+
+    - name: Remove Dashboard
+      become: yes
+      become_user: ubuntu
+      shell: kubectl delete svc kubernetes-dashboard --namespace kube-system --namespace kube-system
+      args:
+        chdir: $HOME  
+
+    - name: Resintall Dashboard
+      become: yes
+      become_user: ubuntu
+      shell: kubectl create -f kube-dash-svc.yaml && rm kube-dash-svc.yaml
+      args:
+        chdir: $HOME          
+
+    - name: Create a service account with cluster-admin
+      become: yes
+      become_user: ubuntu
+      shell:  kubectl create serviceaccount cluster-admin-dashboard-sa
+      args:
+        chdir: $HOME
+      
+    - name: Create a service account with cluster-admin 2
+      become: yes
+      become_user: ubuntu
+      shell:  kubectl create clusterrolebinding cluster-admin-dashboard-sa --clusterrole=cluster-admin --serviceaccount=default:cluster-admin-dashboard-sa
+      args:
+        chdir: $HOME
+
+    - name: Get token variable
+      become: yes
+      become_user: ubuntu
+      shell:  kubectl get secret | grep -E -o "cluster-admin-dashboard-sa-token-\w+"
+      register: cluster_admin_dashboard_sa_token_raw
+      args:
+        chdir: $HOME
+
+    - debug: msg={{ cluster_admin_dashboard_sa_token_raw.stdout }}
+
+    - name: Get token
+      become: yes
+      become_user: ubuntu
+      shell:  kubectl describe secret {{ cluster_admin_dashboard_sa_token_raw.stdout }} >> pod_dashboard_token.txt
+      args:
+        chdir: $HOME
+        creates: pod_dashboard_token.txt
+    
+    - name: View the NodePort
+      become: yes
+      become_user: ubuntu
+      shell: kubectl describe services kubernetes-dashboard --namespace=kube-system >> pod_view_node.txt
+      args:
+        chdir: $HOME
+        creates: pod_view_node.txt
+
+    - name: Install Pod network rbac
+      become: yes
+      become_user: ubuntu
+      shell: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/k8s-manifests/kube-flannel-rbac.yml >> pod_network_rbac_setup.txt
+      args:
+        chdir: $HOME
+        creates: pod_network_rbac_setup.txt
