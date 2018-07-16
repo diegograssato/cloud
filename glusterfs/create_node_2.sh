@@ -13,22 +13,22 @@ IMAGES="/var/lib/libvirt/images"
  
 # Location of cloud image
 #IMAGE="${IMAGES}/CentOS-6-x86_64-GenericCloud.qcow2"
-IMAGE="${IMAGES}/ubuntu-16.04-server-cloudimg-amd64-disk1.img"
+IMAGE="${IMAGES}/CentOS-7-x86_64-GenericCloud.qcow2"
  
-STORAGE="/home/diego/projects/clould/kubernetes"
+STORAGE="/home/diego/projects/clould/glusterfs"
 INSTANCES="${STORAGE}/instances"
  
 # Amount of RAM in MB
-MEM=8096
+MEM=2096
  
 # Number of virtual CPUs
-CPUS=8
-DISK_GB=50
-IPADDR=192.168.2.20
+CPUS=4
+DISK_GB=30
+IPADDR=192.168.2.36
 MSK=255.255.255.0
 DOMAIN="dtux.lan"
 UUID="$(uuidgen)"
-VM_NAME="kube-master"
+VM_NAME="glusterfs2"
 INSTANCE_PATH="${INSTANCES}/${VM_NAME}"
  
 # Check if domain already exists
@@ -49,13 +49,12 @@ USER_DATA=user-data
 META_DATA=meta-data
 NET_DATA=network-config
 CI_ISO="${INSTANCE_PATH}/${VM_NAME}-cidata.iso"
-DISK="${INSTANCE_PATH}/${VM_NAME}.qcow2" 
+DISK="${INSTANCE_PATH}/${VM_NAME}.qcow2"
+DISK2="${INSTANCE_PATH}/${VM_NAME}_1.qcow2"
 
 # Bridge for VMs (default on Fedora is bridge0)
 EXTERNAL_BRIDGE="external"
-EXTERNAL_BRIDGE_MAC="f8:34:41:37:fe:e1"
-INTERNAL_BRIDGE="internal"
-INTERNAL_BRIDGE_MAC="f8:34:41:37:fe:e2"
+EXTERNAL_BRIDGE_MAC="f8:15:41:37:fe:f2"
 
 echo "INFO: Creating instance environment ${INSTANCE_PATH}" 
 
@@ -96,7 +95,9 @@ fqdn: ${VM_NAME}.${DOMAIN}
 bootcmd:
    - echo "nameserver 201.55.232.74" > /etc/resolv.conf
    - echo "domain dtux.lan" >> /etc/resolv.conf
-   - echo "${IPADDR}   ${VM_NAME}    ${VM_NAME}.dtux.lan" >> /etc/hosts
+   - echo "192.168.2.35   glusterfs1  glusterfs1.dtux.lan" >> /etc/hosts
+   - echo "192.168.2.36   glusterfs2     glusterfs2.dtux.lan" >> /etc/hosts
+   - [ mkfs.xfs, /dev/sdb ]   
 
 # configure interaction with ssh server
 ssh_svcname: ssh
@@ -119,23 +120,60 @@ users:
       - $(cat $HOME/.ssh/id_rsa.pub)
 
 runcmd:
-  # - [ apt, -y, remove, cloud-init ]
-   - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
-  # - curl -sL https://gist.githubusercontent.com/alexellis/7315e75635623667c32199368aa11e95/raw/aabc1973111a668473323e91a32970758e75bbbd/kube.sh |sudo sh
-  #  - sudo wget https://github.com/bcicen/ctop/releases/download/v0.7.1/ctop-0.7.1-linux-amd64 -O /usr/local/bin/ctop
-  #  - sudo chmod +x /usr/local/bin/ctop
+    - [ yum, -y, remove, cloud-init ]
+    - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
+#    - [ partx, --update, /dev/sda ]
+#    - [ mkfs.xfs, /dev/sda2 ]
+#    - [ partprobe ]
+#    - parted /dev/sda set 1 boot on 
+
 
 package_update: true
 package_upgrade: false
 packages:
   - ntpdate
   - net-tools
+  - chrony
   - openssh-clients
+  - tar
   - nc
   - vim
-  - git
-  - apt-transport-https
- 
+  - wget
+  - glusterfs
+  - centos-release-gluster
+  - glusterfs-server
+
+# resize_rootfs: false
+
+# disk_setup:
+#   /dev/sda:
+#     table_type: 'mbr'
+#     layout:
+#       - 25
+#       - 75
+#     overwrite: true
+
+fs_setup:
+  - label: brick1
+    filesystem: xfs
+    device: /dev/sdb
+    partition: auto
+#   - label: root_fs
+#     filesystem: 'ext4'
+#     device: /dev/sda
+#     partition: sda1
+#     overwrite: true
+#   - label: data_disk
+#     filesystem: 'xfs'
+#     device: /dev/sda
+#     partition: sda2
+#     overwrite: true    
+
+mounts:
+  - [ sdb, /glusterfs/brick1, xfs, "defaults", "1", "2" ]
+#   - ["/dev/sda1", "/"]
+#   - ["/dev/sda2", "/storage"]  
+
 final_message: "The system is finally up, authenticate using user ubuntu and pass 'passw0rd' on host ${IPADDR}"  
 
 _EOF_
@@ -161,13 +199,6 @@ config:
           - network: 0.0.0.0
             netmask: 0.0.0.0
             gateway: ${IPADDR%.*}.1
-  - type: physical
-    name: eth1
-    mac_address: ${INTERNAL_BRIDGE_MAC}
-    subnets:
-      - type: static
-        address: 10.0.1.10
-        netmask: ${MSK}      
   - type: nameserver
     address: [ 201.55.232.74, 8.8.4.4]
     search: [${VM_NAME}.${DOMAIN}]            
@@ -176,6 +207,7 @@ _EOF_
     echo "$(date -R) instance-id: ${VM_NAME}; local-hostname: ${VM_NAME}" 
     echo "$(date -R) INFO: qemu-img resize ${DISK}  ${DISK_GB}GB"  
     qemu-img resize ${DISK}  ${DISK_GB}GB
+    qemu-img create -f qcow2 "${DISK2}" 60G
  
     # Create CD-ROM ISO with cloud-init config
     echo "$(date -R) Generating ISO for cloud-init..."
@@ -190,12 +222,14 @@ _EOF_
       --vcpus ${CPUS} \
       --import \
       --disk ${DISK},device=disk,bus=scsi,discard=unmap,boot_order=1 \
-      --disk ${CI_ISO},device=cdrom,device=cdrom,perms=ro,bus=sata,boot_order=2 \
+      --disk ${DISK2},device=disk,bus=scsi,discard=unmap,boot_order=2 \
+      --disk ${CI_ISO},device=cdrom,device=cdrom,perms=ro,bus=sata,boot_order=3 \
       --network bridge=${EXTERNAL_BRIDGE},model=virtio,mac=${EXTERNAL_BRIDGE_MAC}  \
-      --network bridge=${INTERNAL_BRIDGE},model=virtio,mac=${INTERNAL_BRIDGE_MAC} \
       --features hyperv_relaxed=on,hyperv_vapic=on,hyperv_spinlocks=on,hyperv_spinlocks_retries=8191,acpi=on \
       --clock hypervclock_present=yes \
       --controller type=scsi,model=virtio-scsi \
+      --accelerate \
+      --os-type linux \
       --noautoconsole \
       --noapic \
       --graphics spice \
