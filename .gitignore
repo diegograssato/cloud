@@ -3,4 +3,9 @@ nginx-etcd
 terraform-ansible-nodejs-google-compute-engine
 terraform
 **/instances/**
+.vscode
+terraform.tfstate
+terraform.tfstate.backup
+crash.log
+.terraform
 openstack/virtual/vbox-scripts-9.0.zip

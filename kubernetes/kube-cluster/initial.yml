@@ -29,3 +29,8 @@
       authorized_key: user=ubuntu key="{{item}}"
       with_file:
         - ~/.ssh/id_rsa.pub
+
+    - name: Set up authorized keys for the root user
+      authorized_key: user=root key="{{item}}"
+      with_file:
+        - ~/.ssh/id_rsa.pub        
