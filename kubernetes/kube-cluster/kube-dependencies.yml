@@ -1,38 +1,46 @@
 - hosts: all
   become: yes
   tasks:
-   - name: Install Docker
-     apt:
-       name: docker.io
-       state: present
-       update_cache: true
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+        update_cache: true
 
-   - name: Install APT Transport HTTPS
-     apt:
-       name: apt-transport-https
-       state: present
+    - name: Creating cgroup Policy
+      copy:
+        content: |
+          {
+            "exec-opts": ["native.cgroupdriver=systemd"]
+          }
+        dest: /etc/docker/daemon.json
 
-   - name: Add Kubernetes apt-key
-     apt_key:
-       url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
-       state: present
+    - name: Install APT Transport HTTPS
+      apt:
+        name: apt-transport-https
+        state: present
 
-   - name: Add Kubernetes' APT repository
-     apt_repository:
-      repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
-      state: present
-      filename: 'kubernetes'
+    - name: Add Kubernetes apt-key
+      apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
 
-   - name: Install kubelet
-     apt:
-       name: kubelet
-       state: present
-       update_cache: true
+    - name: Add Kubernetes' APT repository
+      apt_repository:
+        repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+        state: present
+        filename: 'kubernetes'
 
-   - name: Install kubeadm
-     apt:
-       name: kubeadm
-       state: present
+    - name: Install kubelet
+      apt:
+        name: kubelet
+        state: present
+        update_cache: true
+
+    - name: Install kubeadm
+      apt:
+        name: kubeadm
+        state: present
 
 - hosts: master
   become: yes

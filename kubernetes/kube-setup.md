@@ -25,6 +25,13 @@ kubectl get deployments
 
 ```
 
+## CoreOS
+
+```bash
+https://coreos.com/os/docs/latest/booting-with-libvirt.html
+
+```
+
 ## Ubuntu
 
 ```bash
@@ -41,6 +48,9 @@ https://marc.xn--wckerlin-0za.ch/computer/kubernetes-on-ubuntu-16-04
 http://www.paulinomreyes.com/?p=225
 
 ```
+
+
+
 
 ### Fix
 
