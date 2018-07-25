@@ -23,7 +23,7 @@ MEM=8096
  
 # Number of virtual CPUs
 CPUS=8
-DISK_GB=50
+DISK_GB=20
 IPADDR=192.168.2.20
 MSK=255.255.255.0
 DOMAIN="dtux.lan"

@@ -19,16 +19,16 @@ STORAGE="/home/diego/projects/clould/openstack"
 INSTANCES="${STORAGE}/instances"
  
 # Amount of RAM in MB
-MEM=4096
+MEM=14096
  
 # Number of virtual CPUs
 CPUS=8
-DISK_GB=60
+DISK_GB=100
 IPADDR=192.168.2.14
 MSK=255.255.255.0
 DOMAIN="dtux.lan"
 UUID="$(uuidgen)"
-VM_NAME="compute"
+VM_NAME="stack"
 INSTANCE_PATH="${INSTANCES}/${VM_NAME}"
  
 # Check if domain already exists
@@ -96,9 +96,7 @@ fqdn: ${VM_NAME}.${DOMAIN}
 bootcmd:
    - echo "nameserver 201.55.232.74" > /etc/resolv.conf
    - echo "domain dtux.lan" >> /etc/resolv.conf
-   - echo "192.168.2.12   controller  controller.dtux.lan" >> /etc/hosts
-   - echo "192.168.2.13   network     network.dtux.lan" >> /etc/hosts
-   - echo "192.168.2.14   compute     compute.dtux.lan" >> /etc/hosts
+   - echo "192.168.2.14   stack     stack.dtux.lan" >> /etc/hosts
 
 # configure interaction with ssh server
 ssh_svcname: ssh
@@ -174,9 +172,6 @@ users:
     plain_text_passwd: 'root'
     ssh-authorized-keys: 
       - $(cat $HOME/.ssh/id_rsa.pub)
-      - $(cat $HOME/projects/clould/openstack/keys/controller_rsa.pub)
-      - $(cat $HOME/projects/clould/openstack/keys/network_rsa.pub)
-      - $(cat $HOME/projects/clould/openstack/keys/compute_rsa.pub)
 
 runcmd:
    - [ yum, -y, remove, cloud-init ]
@@ -193,6 +188,8 @@ packages:
   - nc
   - vim
   - git
+  - wget
+  - curl
  
 final_message: "The system is finally up, authenticate using user ubuntu and pass 'passw0rd' on host ${IPADDR}"  
 
@@ -247,6 +244,8 @@ _EOF_
       --ram ${MEM} \
       --vcpus ${CPUS} \
       --import \
+      --cpu host-passthrough \
+      --accelerate \
       --disk ${DISK},device=disk,bus=scsi,discard=unmap,boot_order=1 \
       --disk ${CI_ISO},device=cdrom,device=cdrom,perms=ro,bus=sata,boot_order=2 \
       --network bridge=${EXTERNAL_BRIDGE},model=virtio,mac=${EXTERNAL_BRIDGE_MAC}  \
