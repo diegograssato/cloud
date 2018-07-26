@@ -1,0 +1,11 @@
+[Rancher-LB]
+rancher-lb ansible_host=192.168.2.40 ansible_user=root
+
+[HA-Nodes]
+ha-node1 ansible_host=192.168.2.42 ansible_user=root
+
+[Database]
+ha-db ansible_host=192.168.2.41 ansible_user=root
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3

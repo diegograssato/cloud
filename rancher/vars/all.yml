@@ -1,0 +1,25 @@
+---
+commons:
+    install: '1'
+    timezone: UTC
+    locale: pt_BR.UTF-8
+    packages: [vim, git, docker.io, kubelet, kubeadm ]    
+    user: ubuntu
+    cidr: "10.244.0.0/16"
+
+    # MySQL
+mysql_version: 5.6
+mysql_port: 3306
+mysql_root_password: rootpwd
+mysql_rancher_user: cattle
+mysql_rancher_database: cattle
+mysql_rancher_password: cattle
+
+# LB
+lb_server_name: rancher-ha-setup.com
+
+# Rancher-HA
+rancher_version: latest
+ha_cluster_size: 3
+registration_url: https://rancher-ha-setup.com
+encryption_key:
