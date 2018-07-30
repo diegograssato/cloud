@@ -1,0 +1,25 @@
+---
+
+- name: Add docker apt repo
+  apt_repository:
+      repo="deb https://apt.dockerproject.org/repo {{ ansible_distribution | lower }}-{{ ansible_distribution_release }} main"
+      state=present
+
+- name: Import the Docker repository key
+  apt_key:
+      keyserver=hkp://p80.pool.sks-keyservers.net
+      state=present
+      id=58118E89F3A912897C070ADBF76221572C52609D
+
+- name: Install Docker package
+  apt:
+      name={{ item }}
+      update_cache=yes
+  with_items:
+    - python-pip
+    - docker-engine
+
+- name: Instal docker-py library
+  pip:
+      name=docker-py
+      state=present

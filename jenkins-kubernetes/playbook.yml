@@ -1,0 +1,39 @@
+---
+- hosts: all
+  become: yes
+  vars_files:
+    - vars/all.yml 
+  roles:
+    - { role: docker-ce, tags: ["docker"] }
+
+- name: Setting up Load Balancer
+  hosts: "Rancher-LB"
+  vars_files:
+    - vars/all.yml   
+  become: yes
+  roles:
+    - { role: lb-rancher, tags: ["lb-rancher"] }
+
+- name: Setting Up Backend database
+  hosts: Database
+  vars_files:
+    - vars/all.yml   
+  become: yes
+  roles:
+    - { role: mysql-rancher, tags: ["mysql-rancher"] }
+
+- name: Setting up Rancher HA nodes
+  hosts: "HA-Nodes"
+  vars_files:
+    - vars/all.yml   
+  become: yes
+  roles:
+    - { role: rancher-ha, tags: ["rancher-ha"] }
+
+- name: Inject HA SQL
+  hosts: Database
+  vars_files:
+    - vars/all.yml   
+  become: yes
+  roles:
+    - { role: sql-ha, tags: ["sql-ha"] }    

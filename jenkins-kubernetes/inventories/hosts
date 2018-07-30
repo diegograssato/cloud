@@ -1,0 +1,6 @@
+[master]
+jenkins-master ansible_host=192.168.2.50 ansible_user=root ansible_cpu=5 ansible_disk=5 ansible_pass=root ansible_port=22 ansible_internal_host=10.0.1.152
+
+[nodes]
+jenkins-node1 ansible_host=192.168.2.42 ansible_user=root ansible_mem=1028 ansible_ssh_pass=$marmita10 ansible_internal_host=10.0.1.151
+jenkins-node2 ansible_host=192.168.2.41 ansible_user=root ansible_mem=1028 ansible_pass=anna ansible_cpu=4 ansible_disk=10
