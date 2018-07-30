@@ -1,11 +1,17 @@
 [Rancher-LB]
-rancher-lb ansible_host=192.168.2.40 ansible_user=root
+rancher-lb ansible_host=192.168.2.40 ansible_user=root ansible_cpu=4 ansible_mem=2048 ansible_disk=20 ansible_pass=root ansible_port=22
 
 [HA-Nodes]
-ha-node1 ansible_host=192.168.2.42 ansible_user=root
+ha-node1 ansible_host=192.168.2.42 ansible_user=root ansible_cpu=1 ansible_mem=1028 ansible_disk=10 ansible_pass=root ansible_port=22
+ha-node2 ansible_host=192.168.2.43 ansible_user=root ansible_cpu=1 ansible_mem=1028 ansible_disk=10 ansible_pass=root ansible_port=22
 
 [Database]
-ha-db ansible_host=192.168.2.41 ansible_user=root
+ha-db ansible_host=192.168.2.41 ansible_user=root ansible_cpu=4 ansible_mem=2048 ansible_disk=15 ansible_pass=root ansible_port=22
+
+[Hosts]
+host1 ansible_host=192.168.2.44 ansible_user=root ansible_cpu=1 ansible_mem=1028 ansible_disk=10 ansible_pass=root ansible_port=22
+host2 ansible_host=192.168.2.45 ansible_user=root ansible_cpu=1 ansible_mem=1028 ansible_disk=10 ansible_pass=root ansible_port=22
+
 
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3

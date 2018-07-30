@@ -21,12 +21,12 @@ EXTERNAL_BRIDGE_MASK="255.255.255.0"
 
 INTERNAL_BRIDGE="internal"
 INTERNAL_BRIDGE_MASK="255.255.255.0"
-if(nc -w 1 201.55.232.74 -u 53);then
-    DNS="201.55.232.74"
-else
-    DNS="$(host -t A ns3.google.com. |egrep -o '([[:digit:]]{1,3}\.){3}[[:digit:]]{1,3}')"
-fi
- 
+# if(nc -w 1 201.55.232.74 -u 53);then
+#     DNS="201.55.232.74"
+# else
+#     DNS="$(host -t A ns3.google.com. |egrep -o '([[:digit:]]{1,3}\.){3}[[:digit:]]{1,3}')"
+# fi
+DNS="172.16.22.244"
 function _get_inventories() {
 
     HOST_GROUP=${1:-master}
@@ -122,7 +122,6 @@ pushd "${INSTANCE_PATH}" > /dev/null
             --disk "${CD_ISO_PATH}",device=cdrom,device=cdrom,perms=ro,bus=sata,boot_order=2 \
             --network bridge="${EXTERNAL_BRIDGE}",model=virtio \
             --network bridge="${INTERNAL_BRIDGE}",model=virtio \
-            --features hyperv_relaxed=on,hyperv_vapic=on,hyperv_spinlocks=on,hyperv_spinlocks_retries=8191,acpi=on \
             --clock hypervclock_present=yes \
             --controller type=scsi,model=virtio-scsi \
             --noautoconsole \
@@ -141,7 +140,6 @@ pushd "${INSTANCE_PATH}" > /dev/null
             --disk "${DISK}",device=disk,bus=scsi,discard=unmap,boot_order=1 \
             --disk "${CD_ISO_PATH}",device=cdrom,device=cdrom,perms=ro,bus=sata,boot_order=2 \
             --network bridge="${EXTERNAL_BRIDGE}",model=virtio \
-            --features hyperv_relaxed=on,hyperv_vapic=on,hyperv_spinlocks=on,hyperv_spinlocks_retries=8191,acpi=on \
             --clock hypervclock_present=yes \
             --controller type=scsi,model=virtio-scsi \
             --noautoconsole \
@@ -149,6 +147,8 @@ pushd "${INSTANCE_PATH}" > /dev/null
             --accelerate \
             --graphics spice \
             --print-xml > "${VM_NAME}.xml"
+#--features hyperv_relaxed=on,hyperv_vapic=on,hyperv_spinlocks=on,hyperv_spinlocks_retries=8191,acpi=on \
+                        
     fi
 
     echo "$(date +"%d-%m-%Y %H:%M:%S") - Define domain ${VM_NAME}.xml."
@@ -281,15 +281,15 @@ function _validate_parameters() {
 
 function _create_vm() {
     clear
-    local _NODE="${1}"
+    local _NODE="${1:-}"
     
-    echo -e "\n===== LOADING '${_NODE}' NODE =========================================\n"
+    echo -e "\n===== LOADING '${_NODE:?}' NODE =========================================\n"
     for VM_NAME in $(_get_inventories ${_NODE:?});do
 
         echo -e "\n===== VALIDATING CONFIGURATION FROM '${VM_NAME}' HOST =========================================\n"
         
         _validate_parameters "${VM_NAME}" 
-        
+         
         # Check if domain already exists
         virsh dominfo "${VM_NAME}" > /dev/null 2>&1
         if [ "$?" -eq 0 ]; then

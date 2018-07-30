@@ -19,14 +19,14 @@
 
 - name: Download HAproxy image
   docker_image:
-    name: "haproxy:1.5"
+    name: "haproxy:1.8-alphine"
     state: present
 
 - name: Run HAproxy contianer
   become: yes
   docker_container:
       name: "haproxy"
-      image: haproxy:1.5
+      image: haproxy:1.8-alphine
       network_mode: host
       privileged: yes
       restart_policy: always

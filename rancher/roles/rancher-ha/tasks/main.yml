@@ -20,8 +20,8 @@
 - name: Pull and run the Rancher/server contianer
   docker_container:
       name: "rancher-ha"
-      image: rancher/server:{{ rancher_version }}
-      command: ha
+      image: rancher/server:stable
+      command: --db-host "{{ hostvars['ha-db']['ansible_host'] }}" --db-port 3306 --db-name "{{ mysql_rancher_database }}" --db-user "{{ mysql_rancher_user }}" --db-pass "{{ mysql_rancher_password }}" --advertise-address "{{ hostvars['HA-Nodes']['ansible_host'] }}"
       network_mode: host
       privileged: yes
       restart_policy: always

@@ -37,3 +37,12 @@
   become: yes
   roles:
     - { role: sql-ha, tags: ["sql-ha"] }    
+
+
+- name: Configure hosts
+  hosts: Hosts
+  vars_files:
+    - vars/all.yml   
+  become: yes
+  roles:
+    - { role: docker-ce, tags: ["docker"] }
