@@ -1,0 +1,11 @@
+---
+- name: nginx | Install Nginx
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - nginx
+
+- name: Change default nginx site
+  template: src=default.tpl dest=/etc/nginx/sites-available/default
+  notify: restart nginx

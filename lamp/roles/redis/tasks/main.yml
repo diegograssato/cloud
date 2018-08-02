@@ -1,0 +1,36 @@
+---
+- name: redis-server | Install Redis Packages
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - redis-server
+    - redis-tools
+  
+- name: Checking Redis installation
+  shell: 'test -f /usr/bin/redis-cli && echo "yes" || echo "no"'
+  changed_when: False
+  register: installed_status
+
+- name: Get Redis installed version
+  shell: "/usr/bin/redis-cli -v | awk {'print $2'}"
+  when: installed_status.stdout == "yes"
+  register: is_installed
+
+- name: Set to start boot
+  service: name=redis enabled=yes
+  when: is_installed
+
+- name: Create config file
+  template: src=conf.tpl dest={{ redis_conf_path }}/redis.conf
+  notify: restart redis
+  when: is_installed
+
+- name: Flush handlers to apply config changes
+  meta: flush_handlers
+  when: is_installed
+
+- name: Ensure redis is started
+  service: name=redis state=started
+  when: is_installed
+ 

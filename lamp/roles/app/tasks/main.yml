@@ -1,0 +1,76 @@
+---
+# application tasks to be customized and to run after the main provision
+- name: Change default nginx site
+  template: src=app.tpl dest=/etc/nginx/sites-available/default
+  notify: restart nginx
+
+- name: Ensure directory has correct permissions.
+  file:
+    path: "/tmp/.ssh"
+    state: directory
+    owner: www-data
+    group: www-data
+
+- name: Ensure deploy key is present on the server.
+  copy:
+    src: "files/{{ app.repo_key }}"
+    dest: "/tmp/.ssh/deploy_key"
+    mode: 0600
+    owner: www-data
+    group: www-data
+
+
+- name: Ensure setfacl support is present.
+  package: name=acl
+
+- name: Clonning repositpory
+  git:
+    repo: "{{app.repo}}"
+    dest: "{{app.path}}"
+    version: "{{app.version}}"
+    force: "yes"
+    accept_hostkey: yes
+    key_file: "/tmp/.ssh/deploy_key"
+    depth: 1
+    clone: yes
+    update: yes
+  become_user: root 
+
+- name: Set permission from repositpory
+  file:
+    path: "{{app.path}}"
+    owner: www-data
+    group: www-data
+    recurse: yes
+    
+- name: Clean artifact path
+  file:
+    state: absent
+    path: "/tmp/.ssh"
+  become_user: root
+
+- name: Ensure google key is present on the server.
+  copy:
+    src: "files/{{ app.google_credentials }}"
+    dest: "{{app.path}}/{{ app.google_credentials }}"
+    mode: 0600
+    owner: www-data
+    group: www-data    
+ 
+- include: install.yml
+  when: update is not defined
+
+
+- name: Clear full cache application
+  become: yes
+  become_user: "www-data"
+  shell: "{{ item }}"
+  args:
+    chdir: "{{app.path}}"
+  with_items:
+    - /usr/bin/php bin/console cache:clear --env={{app.env}} 
+    - /usr/bin/php bin/console cache:pool:prune
+    - /usr/bin/php bin/console doctrine:cache:clear-metadata
+    - /usr/bin/php bin/console doctrine:cache:clear-query 
+    - /usr/bin/php bin/console doctrine:cache:clear-result
+    - /usr/bin/php bin/console redis:flushall -n

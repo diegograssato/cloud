@@ -1,0 +1,30 @@
+- name: pecl | Install Pecl Packages
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - php7.2-dev
+  when: php.pecl_packages is defined
+
+- name: Install extension
+  shell: echo "\n\n\n\n\n\n\n\n\n" | pecl install {{ item }}
+  register: pecl_result
+  changed_when: "pecl_result.rc == 0"
+  failed_when: "not (('already installed' in pecl_result.stdout) or ('install ok:' in pecl_result.stdout))"
+  with_items: "{{ php.pecl_packages }}"
+  when: php.pecl_packages is defined
+
+- name: Create extension .ini file
+  template: >
+    src="extension.tpl"
+    dest="/etc/php/7.2/mods-available/{{ item }}.ini"
+    owner="root"
+    group="root"
+    mode=0644
+  with_items: "{{ php.pecl_packages }}"
+  when: php.pecl_packages is defined
+
+- name: Enable extension
+  shell: phpenmod {{ item }}
+  with_items: "{{ php.pecl_packages }}"
+  when: php.pecl_packages is defined  

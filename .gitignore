@@ -9,3 +9,4 @@ terraform.tfstate.backup
 crash.log
 .terraform
 openstack/virtual/vbox-scripts-9.0.zip
+*.retry

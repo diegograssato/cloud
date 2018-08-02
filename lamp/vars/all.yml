@@ -1,0 +1,50 @@
+---
+server:
+    install: '1'
+    packages: [vim, git, htop, iotop, imagemagick, zip, unzip, wkhtmltopdf, xvfb]
+    timezone: America/Sao_Paulo
+    locale: pt_BR.UTF-8
+nginx:
+    install: '1'
+    docroot: /var/www/html/
+    servername: nginx.local
+mysql:
+    install: '1'
+    root_password: root
+    database: sgc-odonto
+    user: odonto
+    password: odonto
+    dump: ''
+redis:
+    install: '1'
+    port: '6379'
+php:
+    install: '1'
+    ppa: php
+    packages: [php7.2,php7.2-fpm, php7.2-cli, php-pear, php7.2-curl, php7.2-imagick, php7.2-fpm, php7.2-gd, php7.2-gmp, php7.2-imap, php7.2-intl, php7.2-mbstring, php7.2-mysql, php7.2-readline, php7.2-pspell, php7.2-xsl, php7.2-opcache, php-apcu, php7.2-bcmath, php7.2-sqlite3]
+    pecl_packages: [redis]
+
+app:
+    name_index: "odonto"
+    name: "Odonto dos maxos"
+    bucket: odonto-dev
+    version: master
+    domain_name: "odonto.local odontologia.maxu"
+    port: 80
+    env: prod
+    debug: 1
+    https: 1
+    repo: "git@bitbucket.org:wesleymmota/sgc-odonto.git"
+    path: /var/www/html/sgc-odonto
+    docroot: /var/www/html/sgc-odonto/public
+    secret: "7asd12d384dc6c213071e49bb7d106df5"
+    database_url: "mysql://root:root@localhost:3306/sgc-odonto"
+    smtp: "smtp://127.0.0.1:1025"
+    index: "index.php"
+    fastcgi_pass: "unix:/var/run/php/php7.2-fpm.sock"
+    repo_key: "id_rsa.github"
+    load_fixtue: true
+    migration: true
+    recreate_database: true
+    google_credentials: google.json
+

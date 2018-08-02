@@ -1,0 +1,15 @@
+---
+- name: ensure timezone is set in apache2 php.ini
+  lineinfile: dest=/etc/php/7.2/apache2/php.ini
+              regexp='date.timezone ='
+              line='date.timezone = {{ server.timezone }}'
+
+- name: enabling opcache
+  lineinfile: dest=/etc/php/7.2/apache2/php.ini
+              regexp=';?opcache.enable=\d'
+              line='opcache.enable=1'
+
+- name: cgi fix pathinfo
+  lineinfile: dest=/etc/php/7.2/apache2/php.ini
+              regexp=';?cgi.fix_pathinfo=\d'
+              line='cgi.fix_pathinfo=0'               

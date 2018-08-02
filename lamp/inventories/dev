@@ -1,0 +1,8 @@
+[servers]
+lamp ansible_host=192.168.2.48 ansible_user=root ansible_cpu=6 ansible_mem=3048 ansible_disk=20 ansible_pass=root ansible_port=22
+
+[database]
+lamp
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3

@@ -1,0 +1,65 @@
+---
+- name: Installing application
+  become: yes
+  become_user: "www-data"
+  shell:  composer install --no-ansi --no-dev --no-interaction --optimize-autoloader
+  args:
+    chdir: "{{app.path}}"
+
+- name: Clear full cache application
+  become: yes
+  become_user: "www-data"
+  shell: "{{ item }}"
+  args:
+    chdir: "{{app.path}}"
+  with_items:
+    - /usr/bin/php bin/console doctrine:database:drop --force
+    - /usr/bin/php bin/console doctrine:database:create
+  when: app.recreate_database == True
+ 
+- name: Updating database application
+  become: yes
+  become_user: "www-data"
+  shell:  /usr/bin/php bin/console  doctrine:schema:update --force 
+  args:
+    chdir: "{{app.path}}"
+
+- name: Load fixtures
+  become: yes
+  become_user: "www-data"
+  shell:  /usr/bin/php bin/console hautelook:fixtures:load --env={{app.env}}  -n
+  args:
+    chdir: "{{app.path}}"
+  when: app.load_fixtue == True  
+
+- name: Migrate database application
+  become: yes
+  become_user: "www-data"
+  shell:  /usr/bin/php bin/console doctrine:migrations:migrate
+  args:
+    chdir: "{{app.path}}"
+  when: app.migration == True
+
+# - name: Create superadmin
+#   become: yes
+#   become_user: "www-data"
+#   shell:  /usr/bin/php bin/console fos:user:create adminuser --super-admin adminuser@super.com p@ssword
+#   args:
+#     chdir: "{{app.path}}"
+#   when: app.load_fixtue == True        
+
+# - name: Create admin
+#   become: yes
+#   become_user: "www-data"
+#   shell: /usr/bin/php bin/console fos:user:create admin wesleymoraes100@hotmail.com p@ssword
+#   args:
+#     chdir: "{{app.path}}"
+#   when: app.load_fixtue == True
+
+# - name: Set permission
+#   become: yes
+#   become_user: "www-data"
+#   shell:  /usr/bin/php bin/console fos:user:promote admin ROLE_ADMIN &&  /usr/bin/php bin/console fos:user:promote adminuser ROLE_ADMIN
+#   args:
+#     chdir: "{{app.path}}"
+#   when: app.load_fixtue == True  
