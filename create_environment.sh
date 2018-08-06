@@ -26,7 +26,7 @@ INTERNAL_BRIDGE_MASK="255.255.255.0"
 # else
 #     DNS="$(host -t A ns3.google.com. |egrep -o '([[:digit:]]{1,3}\.){3}[[:digit:]]{1,3}')"
 # fi
-DNS="172.16.22.244"
+DNS="201.55.232.74"
 function _get_inventories() {
 
     HOST_GROUP=${1:-master}

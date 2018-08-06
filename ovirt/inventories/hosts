@@ -1,0 +1,2 @@
+[ovirt]
+ovirt-1 ansible_host=192.168.2.60 ansible_user=root ansible_cpu=8 ansible_mem=2048 ansible_disk=80 ansible_pass=root ansible_port=22

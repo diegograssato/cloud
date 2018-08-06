@@ -1,0 +1,8 @@
+---
+server:
+    install: '1'
+    timezone: 'America/Sao_Paulo'
+    locale: pt_BR.UTF-8
+    packages: [wget, curl, vim, git, iotop, zip, unzip, qemu-kvm, libvirt, libvirt-python, libguestfs-tools, virt-install] 
+    user: centos
+    cidr: "10.244.0.0/16"

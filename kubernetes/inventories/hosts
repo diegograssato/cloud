@@ -1,0 +1,9 @@
+[masters]
+master ansible_host=192.168.2.20 ansible_user=root ansible_cpu=2 ansible_mem=1024 ansible_disk=20 ansible_pass=root ansible_ssh_port=22
+
+[workers]
+worker1 ansible_host=192.168.2.21 ansible_user=root ansible_cpu=6 ansible_mem=2048 ansible_disk=40 ansible_pass=root ansible_ssh_port=22
+worker2 ansible_host=192.168.2.22 ansible_user=root ansible_cpu=6 ansible_mem=2048 ansible_disk=40 ansible_pass=root ansible_ssh_port=22
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3

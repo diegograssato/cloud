@@ -1,0 +1,73 @@
+---
+- name: Download config images
+  shell:  kubeadm config images pull
+  args:
+    chdir: $HOME
+
+- name: Initialize the cluster
+  shell: kubeadm init --pod-network-cidr={{commons.cidr}}
+  args:
+    chdir: $HOME
+    creates: cluster_initialized.txt
+
+- name: Create .kube directory
+  become: yes
+  become_user: "{{commons.user}}"
+  file:
+    path: $HOME/.kube
+    state: directory
+    mode: 0755
+
+- name: Copy admin.conf to user's kube config
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /home/{{commons.user}}/.kube/config
+    remote_src: yes
+    owner: "{{commons.user}}"
+
+- name: Install Pod network
+  become: yes
+  become_user: "{{commons.user}}"
+  shell: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+  args:
+    chdir: $HOME
+
+- name: Install Pod network rbac
+  become: yes
+  become_user: "{{commons.user}}"
+  shell: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/k8s-manifests/kube-flannel-rbac.yml
+  args:
+    chdir: $HOME
+    
+- name: Allow workloads to be scheduled to the master node
+  become: yes
+  become_user: "{{commons.user}}"
+  shell: kubectl taint nodes `hostname`  node-role.kubernetes.io/master:NoSchedule-
+  args:
+    chdir: $HOME    
+
+- name: Confgiure bash completion
+  become: yes
+  become_user: "{{commons.user}}"
+  shell:  echo 'source <(kubectl completion bash)' >>  /home/{{commons.user}}/.bashrc
+  args:
+    chdir: $HOME
+
+- name: Confgiure env admin
+  become: yes
+  become_user: root
+  shell:  echo 'export KUBECONFIG=/etc/kubernetes/admin.conf' >>  /root/.bashrc
+  args:
+    chdir: $HOME
+    
+- name: Confgiure bash completion form root
+  become: yes
+  become_user: root
+  shell:  echo 'source <(kubectl completion bash)' >>  /root/.bashrc
+  args:
+    chdir: $HOME
+
+- name: Install kubectl
+  apt:
+    name: kubectl
+    state: present

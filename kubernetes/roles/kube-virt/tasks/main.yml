@@ -1,0 +1,77 @@
+---
+- name: Download kubevirt template
+  become: true
+  become_user: "{{commons.user}}"
+  get_url: 
+    url: https://github.com/kubevirt/kubevirt/releases/download/{{kube-virt.version}}/kubevirt.yaml
+    dest: $HOME/kubevirt.yaml
+    force: yes
+    mode: 0664
+    owner: "{{commons.user}}"
+    validate_certs: no
+  when: kubevirt.stat.exists == False
+
+- name:  Download virtctl manager
+  become: true
+  become_user: root
+  get_url: 
+    url: https://github.com/kubevirt/kubevirt/releases/download/{{kube-virt.version}}/virtctl-{{kube-virt.version}}-linux-amd64
+    dest: /usr/bin/virtctl
+    force: yes
+    mode: 0777
+    owner: root
+    validate_certs: no
+  when: virtctl.stat.exists == False
+
+- name: Disable virt-aa-helper on apparmor
+  become: yes
+  shell: ln -s /etc/apparmor.d/usr.lib.libvirt.virt-aa-helper /etc/apparmor.d/disable/
+   
+- name: Disable libvirtd on apparmor
+  become: yes
+  shell: ln -s /etc/apparmor.d/usr.sbin.libvirtd /etc/apparmor.d/disable/ 
+
+- name:  Download vm test
+  become: true
+  become_user: "{{commons.user}}"
+  get_url: 
+    url: https://raw.githubusercontent.com/kubevirt/demo/master/manifests/vm.yaml
+    dest: $HOME/vm.yaml
+    force: yes
+    mode: 0664
+    owner: "{{commons.user}}"
+    validate_certs: no
+  when: vm.stat.exists == False 
+ 
+- name: Create kubevirt environment
+  become: yes
+  become_user: "{{commons.user}}"
+  shell: kubectl apply -f kubevirt.yaml
+  args:
+    chdir: $HOME
+  when: vm.stat.exists == True   
+
+- name: Wait for few minutes until the kube-virt is ready
+  pause:
+    minutes=3
+
+- name: Create vm test
+  become: yes
+  become_user: "{{commons.user}}"
+  shell: kubectl apply -f vm.yaml
+  args:
+    chdir: $HOME
+  when: vm.stat.exists == True        
+
+- name: Show vms
+  become: yes
+  become_user: "{{commons.user}}"
+  shell:  kubectl get vms
+  register: vm_show_raw
+  tags: vm_info
+  args:
+    chdir: $HOME
+
+- debug: msg={{ vm_show_raw.stdout.split('\n')  }}
+  tags: vm_info
+ 

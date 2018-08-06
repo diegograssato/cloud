@@ -1,0 +1,10 @@
+---
+- hosts: all
+  become: yes
+  vars_files:
+    - vars/all.yml
+  environment:
+  roles:
+    #- server
+    - ovirt
+

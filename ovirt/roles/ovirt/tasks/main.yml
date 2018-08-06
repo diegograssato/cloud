@@ -1,0 +1,18 @@
+---
+# - name: Install the ovirt rpm from a remote repo
+#   yum:
+#     name: http://resources.ovirt.org/pub/yum-repo/ovirt-release42.rpm
+#     state: present
+
+
+# - name: Update RedHat
+#   become: yes
+#   yum: update_cache=yes
+#   when: ansible_os_family == "RedHat"
+
+
+- name: Install Packages
+  become: yes
+  yum:
+    name: "ovirt-engine"
+    state: present

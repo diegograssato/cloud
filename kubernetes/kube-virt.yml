@@ -1,0 +1,23 @@
+- hosts: all
+  become: yes
+  vars_files:
+    - vars/all.yml
+  tasks:
+    - name: Install System Packages
+      apt: pkg={{ item }} state=latest
+      with_items:
+        - qemu-kvm 
+        - libvirt-bin 
+        - virtinst 
+        - bridge-utils 
+        - cpu-checker
+
+- hosts: masters
+  become: yes
+  vars_files:
+    - vars/all.yml
+  roles:
+    - kube-virt
+
+
+    
