@@ -2,7 +2,7 @@
 - name: Installing application
   become: yes
   become_user: "www-data"
-  shell:  composer install --no-ansi --no-dev --no-interaction --optimize-autoloader
+  shell:  composer install --no-ansi --no-dev --no-interaction --optimize-autoloader --no-scripts
   args:
     chdir: "{{app.path}}"
 

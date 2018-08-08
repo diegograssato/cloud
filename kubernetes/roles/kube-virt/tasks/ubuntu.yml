@@ -1,0 +1,71 @@
+apiVersion: kubevirt.io/v1alpha2
+kind: VirtualMachinePreset
+metadata:
+  name: large
+spec:
+  selector:
+    matchLabels:
+      kubevirt.io/size: large
+  domain:
+    resources:
+      requests:
+        memory: 1Gi
+---
+apiVersion: kubevirt.io/v1alpha2
+kind: OfflineVirtualMachine
+metadata:
+  name: ubuntu
+  labels:
+    special: ubuntu
+spec:
+  running: true
+  selector:
+    matchLabels:
+      guest: ubuntu
+  template:
+    metadata:
+      labels: 
+        guest: ubuntu
+        kubevirt.io/size: large
+    spec:
+      domain:
+        cpu:
+          # this passthrough the node CPU to the VM
+          model: host-passthrough
+        clock:
+          timezone: "America/Sao_Paulo"
+        resources:
+          requests:
+            memory: 1024M          
+        devices:
+          disks:
+            - name: ubuntu
+              volumeName: ubuntu
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              volumeName: cloudinitvolume
+              disk:
+                bus: virtio                
+      volumes:
+        - name: ubuntu
+          claimName: ubuntu1610
+        - name: cloudinitvolume
+              cloudInitNoCloud:
+                userDataBase64: $(cat startup-script.sh | base64 -w0)
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nodeport
+spec:
+  externalTrafficPolicy: Cluster
+  ports:
+  - name: nodeport
+    nodePort: 30000
+    port: 27017
+    protocol: TCP
+    targetPort: 22
+  selector:
+    special: ubuntu
+  type: NodePort

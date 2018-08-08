@@ -16,11 +16,13 @@ VCPU_MAX_LIMIT="$(grep processor /proc/cpuinfo -c)"
 MEM_MAX_LIMIT="$(awk '/MemTotal/ {printf( "%.2d\n", $2 / 1024 )}' /proc/meminfo)"
 ## NETWORK
 # Bridge for VMs
-EXTERNAL_BRIDGE="external"
+EXTERNAL_BRIDGE="vswitch_lan"
 EXTERNAL_BRIDGE_MASK="255.255.255.0"
 
-INTERNAL_BRIDGE="internal"
+INTERNAL_BRIDGE="vswitch_int"
 INTERNAL_BRIDGE_MASK="255.255.255.0"
+
+INTERNAL_BRIDGE_GW=$(ip -4 -o addr show dev ${INTERNAL_BRIDGE}| awk '{split($4,a,"/");print a[1]}')
 # if(nc -w 1 201.55.232.74 -u 53);then
 #     DNS="201.55.232.74"
 # else
@@ -111,7 +113,7 @@ pushd "${INSTANCE_PATH}" > /dev/null
     qemu-img resize "${DISK}" "${DISK_GB}GB" > /dev/null
  
     echo "$(date +"%d-%m-%Y %H:%M:%S") - Installing the domain and adjusting the configuration..."
-    if [[ -n ${INTERNAL_BRIDGE_IP} ]]; then
+    if [[ -z ${EXTERNAL_BRIDGE} ]]; then
         virt-install --name "${VM_NAME}" \
             --boot loader=/var/lib/libvirt/images/bios.bin-1.11.0 \
             --ram "${MEM}" \
@@ -120,8 +122,8 @@ pushd "${INSTANCE_PATH}" > /dev/null
             --cpu host-passthrough \
             --disk "${DISK}",device=disk,bus=scsi,discard=unmap,boot_order=1 \
             --disk "${CD_ISO_PATH}",device=cdrom,device=cdrom,perms=ro,bus=sata,boot_order=2 \
-            --network bridge="${EXTERNAL_BRIDGE}",model=virtio \
-            --network bridge="${INTERNAL_BRIDGE}",model=virtio \
+            --network bridge="${INTERNAL_BRIDGE}",model=virtio,virtualport_type=openvswitch \
+            --network bridge="${EXTERNAL_BRIDGE}",model=virtio,virtualport_type=openvswitch \
             --clock hypervclock_present=yes \
             --controller type=scsi,model=virtio-scsi \
             --noautoconsole \
@@ -139,7 +141,7 @@ pushd "${INSTANCE_PATH}" > /dev/null
             --cpu host-passthrough \
             --disk "${DISK}",device=disk,bus=scsi,discard=unmap,boot_order=1 \
             --disk "${CD_ISO_PATH}",device=cdrom,device=cdrom,perms=ro,bus=sata,boot_order=2 \
-            --network bridge="${EXTERNAL_BRIDGE}",model=virtio \
+            --network bridge="${INTERNAL_BRIDGE}",model=virtio,virtualport_type=openvswitch \
             --clock hypervclock_present=yes \
             --controller type=scsi,model=virtio-scsi \
             --noautoconsole \
@@ -177,8 +179,8 @@ function _validate_parameters() {
         local VM_NAME=${1} 
         local _ERROR=0
        
-        _GET_EXTERNAL_BRIDGE_IP=$(grep -w "${VM_NAME}" "${INVENTORIES_FILE}"| grep -Po "ansible_host=[^\s]+"|cut -d "=" -f2)
-        _GET_INTERNAL_BRIDGE_IP=$(grep -w "${VM_NAME}" "${INVENTORIES_FILE}"| grep -Pwo "ansible_internal_host=[^\s]+"|cut -d "=" -f2)
+        _GET_EXTERNAL_BRIDGE_IP=$(grep -w "${VM_NAME}" "${INVENTORIES_FILE}"| grep -Po "ansible_external_host=[^\s]+"|cut -d "=" -f2)
+        _GET_INTERNAL_BRIDGE_IP=$(grep -w "${VM_NAME}" "${INVENTORIES_FILE}"| grep -Pwo "ansible_host=[^\s]+"|cut -d "=" -f2)
         _GET_USER=$(grep -w "${VM_NAME}" "${INVENTORIES_FILE}"| grep -Po "ansible_user=[^\s]+"|cut -d "=" -f2)
         _GET_PASS=$(grep -w "${VM_NAME}" "${INVENTORIES_FILE}"| grep -Po "ansible_pass=[^\s]+"|cut -d "=" -f2)
         _GET_PORT="$(grep -w "${VM_NAME}" "${INVENTORIES_FILE}"| grep -Po "ansible_port=[^\s]+"|cut -d "=" -f2)"
@@ -192,10 +194,10 @@ function _validate_parameters() {
  
         
         # Check External IP exists
-        _CHECK_EXTERNAL_BRIDGE_IP=$(grep -v "${VM_NAME}" "${INVENTORIES_FILE}"| grep -w -o "ansible_host=${_GET_EXTERNAL_BRIDGE_IP}")
+        _CHECK_EXTERNAL_BRIDGE_IP=$(grep -v "${VM_NAME}" "${INVENTORIES_FILE}"| grep -w -o "ansible_external_host=${_GET_EXTERNAL_BRIDGE_IP}")
 
         # Check Internal IP exists
-        _CHECK_INTERNAL_BRIDGE_IP=$(grep -v "${VM_NAME}" "${INVENTORIES_FILE}"| grep -w -o "ansible_internal_host=${_GET_INTERNAL_BRIDGE_IP}")
+        _CHECK_INTERNAL_BRIDGE_IP=$(grep -v "${VM_NAME}" "${INVENTORIES_FILE}"| grep -w -o "ansible_host=${_GET_INTERNAL_BRIDGE_IP}")
           
         
         [[ -n "${_CHECK_EXTERNAL_BRIDGE_IP}" ]] && echo -e "$(date +"%d-%m-%Y %H:%M:%S") - External IP '${_GET_EXTERNAL_BRIDGE_IP}' allready in uso.\n" && _ERROR=1
@@ -249,8 +251,8 @@ function _validate_parameters() {
         fi
         
         ADMIN_KEY="${_GET_ADMIN_KEY:-$(cat $HOME/.ssh/id_rsa.pub)}"       
-        EXTERNAL_BRIDGE_IP="${_GET_EXTERNAL_BRIDGE_IP:?}"
-        INTERNAL_BRIDGE_IP="${_GET_INTERNAL_BRIDGE_IP}"
+        EXTERNAL_BRIDGE_IP="${_GET_EXTERNAL_BRIDGE_IP}"
+        INTERNAL_BRIDGE_IP="${_GET_INTERNAL_BRIDGE_IP:?}"
 
         if [[ -n "${_GET_PASS}" ]] &&  [[ -z "${_GET_SSH_PASS}" ]]; then
             PASSWORD="${_GET_PASS}"
@@ -305,7 +307,7 @@ function _create_vm() {
                 virsh undefine "${VM_NAME}"
 
             else
-                echo -e "\n$(date +"%d-%m-%Y %H:%M:%S") - Not overwriting ${VM_NAME}. Connect via ssh using '${ADMIN_USER}@${EXTERNAL_BRIDGE_IP}' and password '${PASSWORD}'.\n"
+                echo -e "\n$(date +"%d-%m-%Y %H:%M:%S") - Not overwriting ${VM_NAME}. Connect via ssh using '${ADMIN_USER}@${INTERNAL_BRIDGE_IP}' and password '${PASSWORD}'.\n"
                 continue;
             fi
         fi
@@ -327,17 +329,17 @@ function _create_vm() {
         while true; do
             echo -e "\n"
             # Check if the machine is already accessible.
-            ping -c 1 "${EXTERNAL_BRIDGE_IP}" >/dev/null 2>&1
+            ping -c 1 "${INTERNAL_BRIDGE_IP}" >/dev/null 2>&1
             if [[ "$?" -ne 0 ]] ; then #if ping exits nonzero...
             FAILS=$((FAILS + 1))
-            echo "INFO: Checking if server ${VM_NAME} with IP ${EXTERNAL_BRIDGE_IP} is online. (${FAILS} out of 20)" 
+            echo "INFO: Checking if server ${VM_NAME} with IP ${INTERNAL_BRIDGE_IP} is online. (${FAILS} out of 20)" 
             fi
 
             # Check if the machine can already be accessed via SSH
-            nc -z -v -w5 "${EXTERNAL_BRIDGE_IP}" 22 >/dev/null 2>&1
+            nc -z -v -w5 "${INTERNAL_BRIDGE_IP}" 22 >/dev/null 2>&1
             if [[ "$?" -ne 0 ]] ; then #if wc exits nonzero...
             FAILS=$((FAILS + 1))
-            echo "INFO: Checking if SSH server is online on ${VM_NAME}(${EXTERNAL_BRIDGE_IP})"
+            echo "INFO: Checking if SSH server is online on ${VM_NAME}(${INTERNAL_BRIDGE_IP})"
             
             else
             echo -e "\n===== SERVER ${VM_NAME} IS ALIVE. LET's REMOVE CLOUD-INIT FILES =========================================\n"
@@ -363,9 +365,9 @@ function _create_vm() {
         # Remove the unnecessary cloud init files
         echo "$(date +"%d-%m-%Y %H:%M:%S") - Cleaning up cloud-init..."
         rm -rfv "${CONFIG2}"
-        ssh-keygen -f "${HOME}/.ssh/known_hosts" -R "${EXTERNAL_BRIDGE_IP}"  >/dev/null 2>&1
         ssh-keygen -f "${HOME}/.ssh/known_hosts" -R "${INTERNAL_BRIDGE_IP}"  >/dev/null 2>&1
-        echo -e "\n$(date +"%d-%m-%Y %H:%M:%S") - Done connect via ssh using ${ADMIN_USER}@${EXTERNAL_BRIDGE_IP} and password ${PASSWORD}.\n" 
+        ssh-keygen -f "${HOME}/.ssh/known_hosts" -R "${INTERNAL_BRIDGE_IP}"  >/dev/null 2>&1
+        echo -e "\n$(date +"%d-%m-%Y %H:%M:%S") - Done connect via ssh using ${ADMIN_USER}@${INTERNAL_BRIDGE_IP} and password ${PASSWORD}.\n" 
     done
  
 }

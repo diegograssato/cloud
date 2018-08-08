@@ -11,6 +11,13 @@
     owner: www-data
     group: www-data
 
+- name: Ensure directory has correct permissions.
+  file:
+    path: "/var/www/.composer"
+    state: directory
+    owner: www-data
+    group: www-data  
+
 - name: Ensure deploy key is present on the server.
   copy:
     src: "files/{{ app.repo_key }}"
@@ -42,7 +49,21 @@
     owner: www-data
     group: www-data
     recurse: yes
-    
+
+- name: Set permission from repositpory
+  file:
+    path: " /var/www/.composer"
+    owner: www-data
+    group: www-data
+    recurse: yes
+
+- name: Set permission from repositpory
+  file:
+    path: " /var/www/html"
+    owner: www-data
+    group: www-data
+    recurse: yes    
+
 - name: Clean artifact path
   file:
     state: absent
