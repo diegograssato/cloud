@@ -57,12 +57,12 @@
     group: www-data
     recurse: yes
 
-- name: Set permission from repositpory
-  file:
-    path: " /var/www/html"
-    owner: www-data
-    group: www-data
-    recurse: yes    
+# - name: Set permission from repositpory
+#   file:
+#     path: " /var/www/html"
+#     owner: www-data
+#     group: www-data
+#     recurse: yes    
 
 - name: Clean artifact path
   file:
