@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<cruise xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="cruise-config.xsd" schemaVersion="111">
+  <server artifactsdir="artifacts" agentAutoRegisterKey="123456789abcdefgh987654321" webhookSecret="57b5b4a5-e839-4735-935c-168e97b80033" commandRepositoryLocation="default" serverId="239404b7-69fe-4fc9-81e9-945654461562" tokenGenerationKey="70602de0-c114-45a5-93f9-baec14d3de2b" />
+  <agents>
+    <agent hostname="efd24f9b0bde" ipaddress="172.18.0.3" uuid="884ff9fe-fca6-4fe8-96e3-c671c05aaa94" />
+    <agent hostname="8a691f34d702" ipaddress="172.18.0.5" uuid="067137b0-3e8e-485c-953c-6c08f909fa27" />
+    <agent hostname="6b4d11a89f78" ipaddress="172.18.0.4" uuid="2652f3c1-11e7-4adf-afc3-b61e3a114243" />
+    <agent hostname="78f75151ecbe" ipaddress="172.18.0.7" uuid="fc63d13e-2afe-4b60-8d8e-a2734a5d4c37" />
+    <agent hostname="d2dca5fd1962" ipaddress="172.18.0.6" uuid="f5242f15-ef94-4b4c-a62a-0f7c70da9dae" />
+    <agent hostname="443359a935c0" ipaddress="172.18.0.9" uuid="39240525-2cba-4d95-8bad-aa95ad15dd0e" />
+    <agent hostname="d0593e6b061c" ipaddress="172.18.0.12" uuid="f2d462bc-0967-44c5-b9cd-e7481fcce957" />
+    <agent hostname="12822131fab0" ipaddress="172.18.0.11" uuid="0df98db1-0aab-45d8-bb22-0fd6940b4f42" />
+    <agent hostname="915450120ff4" ipaddress="172.18.0.10" uuid="26e0e302-ca51-40d5-9d77-254f2df93a6e" />
+    <agent hostname="d502b7b68191" ipaddress="172.18.0.8" uuid="efd9e461-28d0-4e31-ba43-d835dc9efe4d" />
+  </agents>
+</cruise>
