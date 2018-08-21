@@ -26,10 +26,10 @@ php:
 
 app:
     name_index: "odonto"
-    name: "Odonto dos maxos"
+    name: "SGC Odonto"
     bucket: odonto-dev
     version: master
-    domain_name: "odonto.local odontologia.maxu"
+    domain_name: "odonto.local"
     port: 80
     env: prod
     debug: 1

@@ -4,5 +4,10 @@ lamp ansible_host=10.1.2.48 ansible_user=root ansible_cpu=4 ansible_mem=2048 ans
 [database]
 lamp
 
+[stage]
+odonto-dev ansible_host=35.198.37.216 ansible_user=root ansible_port=22
+
+[prod]
+
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3

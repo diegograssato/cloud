@@ -81,7 +81,6 @@
 - include: install.yml
   when: update is not defined
 
-
 - name: Clear full cache application
   become: yes
   become_user: "www-data"
@@ -91,7 +90,7 @@
   with_items:
     - /usr/bin/php bin/console cache:clear --env={{app.env}} 
     - /usr/bin/php bin/console cache:pool:prune
-    - /usr/bin/php bin/console doctrine:cache:clear-metadata
-    - /usr/bin/php bin/console doctrine:cache:clear-query 
-    - /usr/bin/php bin/console doctrine:cache:clear-result
-    - /usr/bin/php bin/console redis:flushall -n
+    # - /usr/bin/php bin/console doctrine:cache:clear-metadata
+    # - /usr/bin/php bin/console doctrine:cache:clear-query 
+    # - /usr/bin/php bin/console doctrine:cache:clear-result
+    # - /usr/bin/php bin/console redis:flushall -n

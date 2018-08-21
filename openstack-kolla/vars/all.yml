@@ -1,0 +1,8 @@
+---
+commons:
+    install: '1'
+    timezone: UTC
+    locale: pt_BR.UTF-8
+    packages: [linux-image-generic-lts-wily, vim, git, python-libvirt ,libvirt-dev, nfs-kernel-server,  gcc, git, libvirt-bin]    
+    user: ubuntu
+    cidr: "10.244.0.0/16"

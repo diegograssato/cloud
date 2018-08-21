@@ -28,7 +28,7 @@ INTERNAL_BRIDGE_GW=$(ip -4 -o addr show dev ${INTERNAL_BRIDGE}| awk '{split($4,a
 # else
 #     DNS="$(host -t A ns3.google.com. |egrep -o '([[:digit:]]{1,3}\.){3}[[:digit:]]{1,3}')"
 # fi
-DNS="201.55.232.74"
+DNS="208.67.220.220"
 function _get_inventories() {
 
     HOST_GROUP=${1:-master}
@@ -113,7 +113,7 @@ pushd "${INSTANCE_PATH}" > /dev/null
     qemu-img resize "${DISK}" "${DISK_GB}GB" > /dev/null
  
     echo "$(date +"%d-%m-%Y %H:%M:%S") - Installing the domain and adjusting the configuration..."
-    if [[ -z ${EXTERNAL_BRIDGE} ]]; then
+    if [[ -n ${EXTERNAL_BRIDGE_IP} ]]; then
         virt-install --name "${VM_NAME}" \
             --boot loader=/var/lib/libvirt/images/bios.bin-1.11.0 \
             --ram "${MEM}" \

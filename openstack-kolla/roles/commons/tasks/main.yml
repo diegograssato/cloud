@@ -1,0 +1,37 @@
+---
+
+- name: Update apt
+  become: yes
+  apt: update_cache=yes
+
+- name: Install System Packages
+  become: yes
+  apt: pkg={{ item }} state=latest
+  with_items:
+    - curl
+    - wget
+    - python-software-properties
+    - apt-transport-https
+    - ca-certificates
+    - software-properties-common
+    - gnupg2
+
+- name: Configure the timezone
+  become: yes
+  template: src=timezone.tpl dest=/etc/timezone
+
+- name: More Configure the timezone
+  become: yes
+  file: src=/usr/share/zoneinfo/{{commons.timezone}} dest=/etc/localtime state=link force=yes backup=yes
+
+- name: Set default system language pack
+  shell: locale-gen {{commons.locale}}
+  become: yes
+
+- name: Install Packages
+  become: yes
+  apt: pkg={{ item }} state=latest
+  with_items: "{{ commons.packages }}"
+  when: commons.packages is defined
+
+- include: configure.yml 
