@@ -1,15 +1,10 @@
 
-- name:  Create the dashboard file, if it doesnt exist already Dashboard
+- name: Check that the kubernetes-dashboard.yaml exists
   become: true
   become_user: "{{commons.user}}"
-  get_url: 
-    url: https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
-    dest: $HOME/kubernetes-dashboard.yaml
-    force: yes
-    mode: 0664
-    owner: "{{commons.user}}"
-    validate_certs: no
-  when: kubernetes_dashboard_configuration.stat.exists == False 
+  stat:
+    path:  $HOME/kubernetes-dashboard.yaml
+  register: kubernetes_dashboard_configuration
      
 
 - name:  Create the dashboard file, if it doesnt exist already Dashboard
@@ -22,7 +17,11 @@
     mode: 0664
     owner: "{{commons.user}}"
     validate_certs: no
-  when: kubernetes_dashboard_configuration.stat.exists == False 
+  when: kubernetes_dashboard_configuration.stat.exists == False
+
+- pause:
+    minutes: 1
+    prompt: "Make sure kubernetes dashboard are started"
 
 - name: Check that the kubernetes-dashboard.yaml exists
   become: true
@@ -98,15 +97,7 @@
   shell: kubectl create -f admin-user.yaml && rm admin-user.yaml
   args:
     chdir: $HOME
-  when: admin_user_yaml.stat.exists == True  
-
-- name: Create an admin role that will be needed in order to access the Kubernetes Dashboard
-  become: yes
-  become_user: "{{commons.user}}"
-  shell: kubectl create -f role-binding.yaml && rm role-binding.yaml
-  args:
-    chdir: $HOME
-  when: role_binding_yaml.stat.exists == True  
+  when: admin_user_yaml.stat.exists == True
 
 # - name: Create an admin user that will be needed in order to access the Kubernetes Dashboard
 #   become: yes
@@ -122,11 +113,14 @@
 #   args:
 #     chdir: $HOME
 
+- pause:
+    minutes: 1
+    prompt: "Make sure kubernetes dashboard are started"
 
 - name: Show token
   become: yes
   become_user: "{{commons.user}}"
-  shell: kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep admin-user | awk '{print $1}') | grep "token:"
+  shell: kubectl -n kube-system describe secret $(kubectl -n kube-system get secret |  egrep -o "admin-user-token-\w" | awk '{print $1}') | grep "token:"
   register: cluster_admin_dashboard_show_token_raw
   tags: get_info
   args:

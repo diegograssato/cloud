@@ -52,7 +52,7 @@
 
 - name: Set permission from repositpory
   file:
-    path: " /var/www/.composer"
+    path: "/var/www/.composer"
     owner: www-data
     group: www-data
     recurse: yes
@@ -81,6 +81,9 @@
 - include: install.yml
   when: update is not defined
 
+- include: update.yml
+  when: update is defined
+
 - name: Clear full cache application
   become: yes
   become_user: "www-data"
@@ -93,4 +96,4 @@
     # - /usr/bin/php bin/console doctrine:cache:clear-metadata
     # - /usr/bin/php bin/console doctrine:cache:clear-query 
     # - /usr/bin/php bin/console doctrine:cache:clear-result
-    # - /usr/bin/php bin/console redis:flushall -n
+    - /usr/bin/php bin/console redis:flushall -n

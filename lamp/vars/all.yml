@@ -39,7 +39,7 @@ app:
     docroot: /var/www/html/sgc-odonto/public
     secret: "7asd12d384dc6c213071e49bb7d106df5"
     database_url: "mysql://root:root@localhost:3306/sgc-odonto"
-    smtp: "smtp://127.0.0.1:1025"
+    smtp: "smtp://smtp.sparkpostmail.com:587?encryption=tls&auth_mode=login&username=SMTP_Injection&password=21352e814134dcf6dce303da1b1a9b938f27e5c5"
     index: "index.php"
     fastcgi_pass: "unix:/var/run/php/php7.2-fpm.sock"
     repo_key: "id_rsa.github"

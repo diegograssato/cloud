@@ -114,6 +114,7 @@ pushd "${INSTANCE_PATH}" > /dev/null
  
     echo "$(date +"%d-%m-%Y %H:%M:%S") - Installing the domain and adjusting the configuration..."
     if [[ -n ${EXTERNAL_BRIDGE_IP} ]]; then
+   
         virt-install --name "${VM_NAME}" \
             --boot loader=/var/lib/libvirt/images/bios.bin-1.11.0 \
             --ram "${MEM}" \

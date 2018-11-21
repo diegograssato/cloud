@@ -31,3 +31,16 @@
   with_file:
     - ~/.ssh/id_rsa.pub   
 
+- name: Add remote user to group docker
+  command: usermod -aG docker {{ansible_user}}
+  notify: restart docker
+
+
+- name: enable if command above does strange things (debug me)
+  command: systemctl enable docker
+  
+# This is needed based on Docker 1.13 update. Kubernetes and/or CNI could also fix this.  
+- name: Re-enable ipchains FORWARD
+  iptables:
+    chain: FORWARD
+    policy: ACCEPT  

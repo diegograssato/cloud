@@ -1,11 +1,11 @@
-[servers]
+[dev]
 lamp ansible_host=10.1.2.48 ansible_user=root ansible_cpu=4 ansible_mem=2048 ansible_disk=20 ansible_pass=root ansible_port=22
 
 [database]
 lamp
 
 [stage]
-odonto-dev ansible_host=35.198.37.216 ansible_user=root ansible_port=22
+odonto-dev ansible_host=35.237.239.252 ansible_user=root ansible_port=22
 
 [prod]
 
